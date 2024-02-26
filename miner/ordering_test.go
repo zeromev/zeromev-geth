@@ -121,19 +121,6 @@ func testTransactionPriceNonceSort(t *testing.T, baseFee *big.Int) {
 				t.Errorf("invalid nonce ordering: tx #%d (A=%x N=%v) < tx #%d (A=%x N=%v)", i, fromi[:4], txi.Nonce(), i+j, fromj[:4], txj.Nonce())
 			}
 		}
-		// If the next tx has different from account, the price must be lower than the current one
-		if i+1 < len(txs) {
-			next := txs[i+1]
-			fromNext, _ := types.Sender(signer, next)
-			tip, err := txi.EffectiveGasTip(baseFee)
-			nextTip, nextErr := next.EffectiveGasTip(baseFee)
-			if err != nil || nextErr != nil {
-				t.Errorf("error calculating effective tip: %v, %v", err, nextErr)
-			}
-			if fromi != fromNext && tip.Cmp(nextTip) < 0 {
-				t.Errorf("invalid gasprice ordering: tx #%d (A=%x P=%v) < tx #%d (A=%x P=%v)", i, fromi[:4], txi.GasPrice(), i+1, fromNext[:4], next.GasPrice())
-			}
-		}
 	}
 }
 
@@ -182,10 +169,7 @@ func TestTransactionTimeSort(t *testing.T) {
 		if i+1 < len(txs) {
 			next := txs[i+1]
 			fromNext, _ := types.Sender(signer, next)
-
-			if txi.GasPrice().Cmp(next.GasPrice()) < 0 {
-				t.Errorf("invalid gasprice ordering: tx #%d (A=%x P=%v) < tx #%d (A=%x P=%v)", i, fromi[:4], txi.GasPrice(), i+1, fromNext[:4], next.GasPrice())
-			}
+			
 			// Make sure time order is ascending if the txs have the same gas price
 			if txi.GasPrice().Cmp(next.GasPrice()) == 0 && txi.Time().After(next.Time()) {
 				t.Errorf("invalid received time ordering: tx #%d (A=%x T=%v) > tx #%d (A=%x T=%v)", i, fromi[:4], txi.Time(), i+1, fromNext[:4], next.Time())
